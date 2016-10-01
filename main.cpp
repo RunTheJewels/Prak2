@@ -59,6 +59,7 @@ public:
 	void rotate(uint i, uint j, float alpha) //Умножение на матрицу поворота
 	{
 		double *rowi=new double [rows],*rowj=new double [rows];
+		double cs=cos(alpha),sn=sin(alpha);
 		for (uint x=0; x<rows; x++)
 		{
 			rowi[x]=data[i][x];
@@ -66,16 +67,29 @@ public:
 		}
 		for (uint k=0; k<rows; k++)
 		{
-			data[i][k]=rowi[k]*cos(alpha)-rowj[k]*sin(alpha);
-			data[j][k]=rowi[k]*sin(alpha)+rowj[k]*cos(alpha);
+			data[i][k]=rowi[k]*cs+rowj[k]*sn;
 		}
 		for (uint k=0; k<rows; k++)
 		{
-			data[k][i]=rowi[k]*cos(alpha)-rowj[k]*sin(alpha);
-			data[k][j]=rowi[k]*sin(alpha)+rowj[k]*cos(alpha);
+			data[j][k]=-rowi[k]*sn+rowj[k]*cs;
 		}
-		delete[] rowi;
-		delete[] rowj;
+		
+		for (uint x=0; x<rows; x++)
+		{
+			rowi[x]=data[x][i];
+			rowj[x]=data[x][j];
+		}
+		for (uint k=0; k<rows; k++)
+		{
+			data[k][i]=rowi[k]*cs+rowj[k]*sn;
+		}
+		for (uint k=0; k<rows; k++)
+		{
+			data[k][j]=-rowi[k]*sn+rowj[k]*cs;
+		}
+		
+		//delete[] rowi;
+		//delete[] rowj;
 	}
 	
 	bool isSymm()
@@ -96,11 +110,12 @@ public:
 		uint maxi=0,maxj=0;
 		for (uint i=0; i<rows; i++)
 		{
-			for (uint j=0; j<i; j++)
+			for (uint j=i+1; j<rows; j++)
 			{
 				if (i==j) continue;
 				if (abs(data[i][j])>max)
 				{
+					
 					maxi=i; maxj=j; max=abs(data[i][j]);
 				}
 			}
@@ -119,19 +134,19 @@ public:
 				res+=data[i][j]*data[i][j];
 			}
 		}
-		return res;
+		return sqrt(res);
 	}
 	
 	double getalpha(uint i, uint j)
 	{
-		return atan(2*data[i][j]/(data[j][j]-data[i][i]));
+		return atan(2*data[i][j]/(data[j][j]-data[i][i]))/2;
 	}
 };
 
 int main ()
 {
 	Matrix a;
-	double eps=1;
+	double eps=0.00001;
 	Coord c(0,0);
 	
 	if (!a.isSymm())
@@ -142,7 +157,8 @@ int main ()
 	while (a.diff()>=eps)
 	{
 		c=a.max();
-		a.rotate(c.x,c.y,a.getalpha(c.x,c.y));
+		//cout << c.x << " " << c.y << " " << a.getalpha(c.x,c.y) << endl;
+		a.rotate(c.x,c.y,a.getalpha(c.x,c.y));;
 	}
 	a.out();
 	return 0;
